@@ -1,3 +1,4 @@
+import os
 
 
 def greeting(env: str = "Dev") -> str: 
@@ -5,4 +6,4 @@ def greeting(env: str = "Dev") -> str:
 
 
 if __name__ == "__main__": 
-    print(greeting())
+    print(greeting(os.environ.get("ENV_LABEL", "Local")))

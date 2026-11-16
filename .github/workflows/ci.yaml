@@ -4,19 +4,39 @@ on:
   push: 
     branches: [master]
 
-jobs:
+jobs:                                                                           # Runs jobs in parallel unless `need` keyword is used.
 
-  test: 
-    runs-on: ubuntu-latest
-    steps: 
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2
-      - run: uv run pytest
+  test:                                                                         # Job ID      
+    name: Execute Asserts                                                       # Job Name
+    runs-on: ubuntu-latest                                                      # What image to deploy
+    steps:                                                                      # What to execute on machine
+      - name: Clone Repo Triggering Commit                                      
+        uses: actions/checkout@v4                                               # clone the latest code from repo + what version of the instruction to use. 
+      
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2       # setup UV + what version of the instruction to use
+      - run: uv run pytest                                                      # Run python using UV
 
-  run-hello: 
-    needs:   test
+
+  deploy-dev:                                                                   # because no `name` tag was used, this is ID and Name.
+    needs: test                                                                 # picks the runner’s OS image.
     runs-on: ubuntu-latest
+    environment: DEV                                                            # Setup in GitHub Repo settings under Environments
     steps: 
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2
       - run:  uv run src/hello_world.py
+        env:                                                                    # sets environment variables for that one step’s process
+          ENV_LABEL: ${{ vars.ENV_LABEL }}                                      # copies the GitHub environment variable into one your script reads with os.environ.get("ENV_LABEL").
+
+  deploy-qa:
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    environment: QA
+    steps:  
+      - name: Clone Repo Triggering Commit
+        uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2
+      - run:  uv run src/hello_world.py
+        env: 
+          ENV_LABEL: ${{ vars.ENV_LABEL }} 
+    

@@ -4,10 +4,12 @@ on:
   push: 
     branches: [master]
 
+  workflow_dispatch:
+
 jobs:                                                                           # Runs jobs in parallel unless `need` keyword is used.
 
   test:                                                                         # Job ID      
-    name: Execute Asserts                                                       # Job Name
+    name: Test Execute Asserts                                                       # Job Name
     runs-on: ubuntu-latest                                                      # What image to deploy
     steps:                                                                      # What to execute on machine
       - name: Clone Repo Triggering Commit                                      
@@ -26,7 +28,7 @@ jobs:                                                                           
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2
       - run:  uv run src/hello_world.py
         env:                                                                    # sets environment variables for that one step’s process
-          ENV_LABEL: ${{ vars.ENV_LABEL }}                                      # copies the GitHub environment variable assignes it to ENV_LABEL. 
+          ENV_LABEL: ${{ vars.ENV_LABEL }}                                      # copies the GitHub environment variable assignes it to "ENV_LABEL". 
 
   deploy-qa:
     needs: deploy-dev
@@ -39,4 +41,17 @@ jobs:                                                                           
       - run:  uv run src/hello_world.py
         env: 
           ENV_LABEL: ${{ vars.ENV_LABEL }} 
-    
+
+
+  deploy-prod: 
+    needs: deploy-qa
+    runs-on: ubuntu-latest
+    environment: PROD
+    steps: 
+      - name: Clone Repo Triggering Commit
+        uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2
+      - run: uv run src/hello_world.py
+        env: PROD 
+          ENV_LABEL: ${{ vars.ENV_LABEL }}
+

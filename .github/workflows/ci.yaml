@@ -1,13 +1,16 @@
 name: ci
 
-on: 
+on:                                                                             # Events that start the workflow.
   push: 
-    branches: [master]
+    branches: [master]                                                          # Direct pushes and PR merges into master
+  pull_request: 
+    branches: [master]                                                          # PRs targeting master: opened, updated, reopened
+  workflow_dispatch:      # optional: adds a manual "Run workflow" button
 
 jobs:                                                                           # Runs jobs in parallel unless `need` keyword is used.
 
-  test:                                                                         # Job ID      
-    name: Test Execute Asserts                                                       # Job Name
+  test:                                                                         # Job ID  (Name if not explicitly given)    
+    name:   Execute Asserts                                                     # Name given to Job ID
     runs-on: ubuntu-latest                                                      # What image to deploy
     steps:                                                                      # What to execute on machine
       - name: Clone Repo Triggering Commit                                      
@@ -19,6 +22,7 @@ jobs:                                                                           
 
   deploy-dev:                                                                   # because no `name` tag was used, this is ID and Name.
     needs: test                                                                 # picks the runner’s OS image.
+    if: github.event_name != 'pull_request'                                     # Does not run if it is a PR
     runs-on: ubuntu-latest
     environment: DEV                                                            # Setup in GitHub Repo settings under Environments
     steps: 
@@ -30,6 +34,7 @@ jobs:                                                                           
 
   deploy-qa:
     needs: deploy-dev
+    if: github.event_name != 'pull_request' 
     runs-on: ubuntu-latest
     environment: QA
     steps:  
@@ -43,6 +48,7 @@ jobs:                                                                           
 
   deploy-prod: 
     needs: deploy-qa
+    if: github.event_name != 'pull_request' 
     runs-on: ubuntu-latest
     environment: PROD
     steps: 
